@@ -29,3 +29,20 @@ Because the problem persists after restart, this is particularly important.
 Run on the secondary:
 EXEC sys.xp_readerrorlog 0, 1, N'DB1';
 EXEC sys.xp_readerrorlog 0, 1, N'DB2';
+
+Next — Run this on the secondary
+SELECT
+    adc.database_name,
+    drs.database_state_desc,
+    drs.synchronization_state_desc,
+    drs.is_suspended,
+    drs.suspend_reason_desc,
+    drs.redo_queue_size,
+    drs.redo_rate
+FROM sys.dm_hadr_database_replica_states drs
+JOIN sys.availability_databases_cluster adc
+    ON drs.group_database_id = adc.group_database_id
+WHERE drs.is_local = 1
+  AND adc.database_name IN ('DB1', 'DB2');
+
+EXEC sys.xp_readerrorlog 0, 1, N'DB2';
