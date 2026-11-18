@@ -1,0 +1,31 @@
+Step 1 — Check the database recovery state
+Connect to the secondary replica, open a fresh SSMS query window in master, and run:
+SELECT
+    @@SERVERNAME AS ServerName,
+    name AS DatabaseName,
+    state_desc,
+    recovery_model_desc
+FROM sys.databases
+WHERE name IN ('DB1', 'DB2');
+
+Step 2 — Check AG synchronization status
+On the same secondary:
+SELECT
+    DB_NAME(database_id) AS DatabaseName,
+    database_state_desc,
+    synchronization_state_desc,
+    synchronization_health_desc,
+    is_suspended,
+    suspend_reason_desc,
+    log_send_queue_size,
+    redo_queue_size
+FROM sys.dm_hadr_database_replica_states
+WHERE is_local = 1
+AND DB_NAME(database_id) IN ('DB1', 'DB2');
+
+tep 3 — Check SQL Server error logs
+Because the problem persists after restart, this is particularly important.
+
+Run on the secondary:
+EXEC sys.xp_readerrorlog 0, 1, N'DB1';
+EXEC sys.xp_readerrorlog 0, 1, N'DB2';
